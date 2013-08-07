@@ -83,7 +83,7 @@ A typical line has 3+5×8=43 items for [59st + Lexington Ave](http://en.wikipedi
 - the second column is the time stamp.  it usually checks every **4** hours
 - the status is **REGULAR**
 - the *entries* read "004209603" and the *exits* read "001443585"
-- between 8am and 12am on July 23, 741-663=78 passengers entered the station (and 71 exited ) *through this turnstile*
+- between 8am and 12am on July 23, 741-663=78 passengers entered the station (and 71 exited ) *through this turnstile* 
 
 The three info `A002,R051,02-00-00` specify a single turnstile in the entire MTA system.  Looking at `remote-booth-station.csv` we find it was part of a group of 3 entrances, itself part of two sets of entrances.
 
@@ -94,4 +94,20 @@ The three info `A002,R051,02-00-00` specify a single turnstile in the entire MTA
 	R051,R245A,59 ST,456NQR,IRT
 	R051,A002,LEXINGTON AVE,456NQR,BMT
 
-This is a very busy station with passengers between Queens, the Upper East Side, Times Square, and Midtown East.
+This station has two names `LEXINGTON AVE` and `59 ST`. This is a very busy station with passengers between Queens, the Upper East Side, Times Square, and Midtown East.
+
+# Turnstiles and their Statuses
+
+You are ready to read the MTA turns tile data.  I suggest you stop reading and get your hands dirty.  In about 30 mins to 1 hour, this section will make a lot more sense.
+
+## Turnstile ID's
+
+By now, we sort-of-have rough interpretations for Remote-Booth-Station
+
+- **Remote** is a station entrance 
+- **Booth** probably has to do with subway booths
+- Station is well...
+
+## Door Statuses
+
+`REGULAR` is not the only code we can have and turnstiles don't necessarily report every 4 hours.  I've seen status `DOOR OPEN`, `RECOVR AUD`, `LOGON` and time stamps of `08:40:29`.  These irregularities bend in knots your chances at visualizating MTA's turnstile data.
