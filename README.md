@@ -67,7 +67,7 @@ The 11 lines 1-2-3-7-A-C-E-N-Q-R-S pass thru here.  There are two "remotes" with
 
 MTA's turnstile data set is comma-separated, with 3 items related to the station and turnstile, followed by groups of five.
 
-A typical line has 3+5×8=43 items:
+A typical line has 3+5×8=43 items for [59st + Lexington Ave](http://en.wikipedia.org/wiki/Lexington_Avenue_/_59th_Street_(New_York_City_Subway)) station on July 27, 2013.
 
 	A002,R051,02-00-00,
 	07-27-13,00:00:00,REGULAR,004209603,001443585,
@@ -78,3 +78,20 @@ A typical line has 3+5×8=43 items:
 	07-27-13,20:00:00,REGULAR,004210276,001443777,
 	07-28-13,00:00:00,REGULAR,004210432,001443801,
 	07-28-13,04:00:00,REGULAR,004210472,001443805
+
+- the first column is the date
+- the second column is the time stamp.  it usually checks every **4** hours
+- the status is **REGULAR**
+- the *entries* read "004209603" and the *exits* read "001443585"
+- between 8am and 12am on July 23, 741-663=78 passengers entered the station (and 71 exited ) *through this turnstile*
+
+The three info `A002,R051,02-00-00` specify a single turnstile in the entire MTA system.  Looking at `remote-booth-station.csv` we find it was part of a group of 3 entrances, itself part of two sets of entrances.
+
+	R050,R244,59 ST,456NQR,IRT
+	R050,R244A,59 ST,456NQR,IRT
+	R050,A004,LEXINGTON AVE,456NQR,BMT
+	R051,R245,59 ST,456NQR,IRT
+	R051,R245A,59 ST,456NQR,IRT
+	R051,A002,LEXINGTON AVE,456NQR,BMT
+
+This is a very busy station with passengers between Queens, the Upper East Side, Times Square, and Midtown East.
