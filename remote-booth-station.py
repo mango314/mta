@@ -55,13 +55,48 @@ def load_turnstile():
 	return turnstile.count()
 
 # Ex. #4 Get turnstile data by Remote
-t = turnstile.find({'remote':"A002", 'status':'REGULAR'}, {'_id':0, 'in':1, 'date':1, 'code':1, 'out':1})
-result = {}
-for x in t:
-	if x['code'] not in result.keys():
-		result[x['code']] = []
-	result[x['code']] += [x]
-for x in result.keys():
-	for y in result[x]:
-		print y
-	print '\n\n'
+def timeSeries(remote):
+	t = turnstile.find({'remote':remote, 'status':'REGULAR'}, {'_id':0, 'in':1, 'date':1, 'code':1, 'out':1})
+	result = {}
+	for x in t:
+		if x['code'] not in result.keys():
+			result[x['code']] = []
+		result[x['code']] += [{'date': x['date'],'in':int(x['in']), 'out': int(x['out'])}]
+	return result
+
+def scrub(result):
+	cleaned = {}
+	for x in result.keys():
+		first = result[x][0]
+		cleaned[x] = [{'hour': y['date'].hour/4, 'in': y['in']- first['in'], 'out': y['out'] - first['out']  } for y in result[x]]
+	return cleaned
+
+
+if __name__ == "__main__":
+	w = {}
+	for x in stat('KINGSBRIDGE RD')['RB']:
+		result = timeSeries(x['booth'])
+		w = dict(w.items() + scrub(result).items())
+	#print [len(w[x]) for x in w.keys()]
+	'''for code in w.keys():
+		count = 0
+		turnstile = w[code]
+		fT = []
+		for i,x in enumerate(turnstile[:-1]):
+			if x['hour'] != turnstile[i+1]['hour']:
+				print count, x
+				count += 1
+				fT += [x]
+			#if count % 6 == 0: print
+		print count, turnstile[-1]
+		print
+		fT += [turnstile[-1]]
+		w[code] = fT'''
+
+	# w is a fairly clean turnstile count : every 4 hours * 7 days a week = 42 data points
+	print [len(w[code]) for code in w]
+
+	# if I want merge the turnstile streams I have to "shuffle a deck of cards"
+	
+
+
