@@ -111,3 +111,6 @@ By now, we sort-of-have rough interpretations for Remote-Booth-Station
 ## Door Statuses
 
 `REGULAR` is not the only code we can have and turnstiles don't necessarily report every 4 hours.  I've seen status `DOOR OPEN`, `RECOVR AUD`, `LOGON` and time stamps of `08:40:29`.  These irregularities bend in knots your chances at visualizating MTA's turnstile data.
+
+# Progress Report
+![](https://dl.dropboxusercontent.com/u/17949100/OGP/bedford_park.png)

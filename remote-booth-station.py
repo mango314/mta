@@ -68,9 +68,10 @@ def scrub(result):
 	cleaned = {}
 	for x in result.keys():
 		first = result[x][0]
-		cleaned[x] = [{'hour': y['date'].hour/4, 'in': y['in']- first['in'], 'out': y['out'] - first['out']  } for y in result[x]]
+		cleaned[x] = [{'hour': (y['date']-first['date']).total_seconds(), 'in': y['in']- first['in'], 'out': y['out'] - first['out']  } for y in result[x]]
 	return cleaned
 
+import simplejson as json
 
 if __name__ == "__main__":
 	w = {}
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 		result = timeSeries(x['booth'])
 		w = dict(w.items() + scrub(result).items())
 	#print [len(w[x]) for x in w.keys()]
-	'''for code in w.keys():
+	for code in w.keys():
 		count = 0
 		turnstile = w[code]
 		fT = []
@@ -91,10 +92,19 @@ if __name__ == "__main__":
 		print count, turnstile[-1]
 		print
 		fT += [turnstile[-1]]
-		w[code] = fT'''
+		w[code] = fT
 
 	# w is a fairly clean turnstile count : every 4 hours * 7 days a week = 42 data points
 	print [len(w[code]) for code in w]
+
+	w2 = {}
+	for code in w.keys():
+		for i,x in enumerate(w[code][1:]):
+			print {'out': x['out']-w[code][i]['out'], 'in': x['in']-w[code][i]['in'], 'hour': x['hour']}
+		w2[code] = [{'out': x['out']-w[code][i]['out'], 'in': x['in']-w[code][i]['in'], 'hour': x['hour']} for i,x in enumerate(w[code][1:])]
+		w2[code] = [{"out":w2[code][-1]["out"],"hour":0, "in":w2[code][-1]["in"]}] + w2[code]
+
+	file( "bedford_park.json" , 'w').write(json.dumps([{"key":x, "values":w2[x]} for x in w.keys()]))
 
 	# if I want merge the turnstile streams I have to "shuffle a deck of cards"
 	
