@@ -10,10 +10,22 @@ The goal would be to specialize ajschumacher's "Calendar view" [visualization](h
 
 The weekly [metrocard swipes](http://www.mta.info/developers/fare.html) of the City are also available from 2010 onwards.
 
+### Use Cases: Motion & Location
+
+The Heisenberg Uncertainty principle says we can't say too much about where a particle **is** and where a particle **is going** *at the same time*.  In the New Yorker, they combined turnstile data with census data to write an viz addressing [income disparity](http://www.newyorker.com/sandbox/business/subway.html).
+
 Both data sets would make great use of [mixture models](http://www.robots.ox.ac.uk/~az/lectures/ml/lect8.pdf) to make guesses:
 
 - Among the people who enter/exit Times Square, what fraction is taking the S-train?
 - Among the people who enter/exit Grand Central Station who is taking the 6-train?
+- At 125st Lexington Ave, how many people are heading uptown or downtown?
+
+Theoretically the MTA data offers an unprecedented level of granularity:
+
+- Every 4 hours
+- Every station - or even station entrance - in NYC
+- Weekdays, Saturday, Sunday
+- Every week since June 2010
 
 # How to Decipher the Turnstile Data
 In order to read MTA's data set you need to understand lines like
