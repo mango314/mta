@@ -1,24 +1,28 @@
 import pymongo
 from pymongo import MongoClient
+import simplejson as json
+import datetime
+
 client = MongoClient()
 db = client.OGP
-
 station = db.mta_station
+turnstile = db.mta_turnstile
+
 
 def RBS():
-	rbs = file("Remote-Booth-Station.csv")
-	cats = rbs.readline()[:-1].split(',')
+	'''rbs = file("Remote-Booth-Station.csv")
+	#cats = rbs.readline()[:-1].split(',')
 
 	for x in rbs.readlines():
 		z = x[:-1].split(',')
-		#rbs = "{'remote':%s,'booth':%s,'station':%s,'lines':%s,'division':%s}"%(z[0], z[1], z[2], list(z[3]), z[4])
 		rbs = {'remote':z[0],'booth':z[1],'station':z[2],'lines':list(z[3]),'division':z[4]}
 		station.insert(rbs)
 
 	print station.find_one()
-	print station.count()
+	print station.count()'''
+	return station.find()
 
-print station.count()
+
 # Ex. #1 All stations serviced by a particular line
 def line( D ):
 	sta = {}
@@ -30,28 +34,42 @@ def line( D ):
 
 # Ex. #2 All booths at a particular station
 
-def stat( name ):
-	stop = station.find( {"station": name }, {"division":1, "remote":1, "lines":1, "_id":0, "booth":1, "station":1  })
+def booths( stationName ):
+	# occasionally same station has two names
+	stop = station.find( {"station": stationName }, {"division":1, "remote":1, "lines":1, "_id":0, "booth":1, "station":1  })
+	
 	return { "division": stop[0]["division"], 
 	"lines": stop[0]["lines"], 
 	"station": stop[0]["station"],'RB':
 	[{"booth":x['booth'], "remote": x['remote']} for x in stop] }
 
 # Ex. #3 load turnstile data into mongo
-import datetime
-turnstile = db.mta_turnstile
+
+
 def load_turnstile():
+	turnstile.remove()
 	t = file('turnstile_130803.txt')
+	cur = None
+	row = None
 	for x in t.readlines():
 		z = x.replace(' ', '')[:-2].split(',')
-		print z[:3]
+
+		if( z[0] != cur):
+			if(row):
+				print "insert row", z[:3]
+				turnstile.insert(row)
+			turnstileReading = []
+
+		cur = z[0]
 		for x in range((len(z)-3)/5):
 			c = 3 + 5*x
 			date = [int(w) for w in z[c].split('-')]
 			hour = [int(w) for w in z[c+1].split(':')]
-			row = {'remote': z[0], 'booth': z[1], 'code': z[2], 
-			'date':datetime.datetime(2000 + date[2], date[0], date[1], hour[0], hour[1], hour[2]), 'time':z[c+1],  'status': z[c+2], 'in': int(z[c+3]), 'out': int(z[c+4]) }
-			turnstile.insert(row)
+			turnstileReading += [
+				{'date':datetime.datetime(2000 + date[2], date[0], date[1], hour[0], hour[1], hour[2]), 
+				'time':z[c+1],  'status': z[c+2], 'in': int(z[c+3]), 'out': int(z[c+4]) }
+			]
+		row = {'booth':z[0], 'remote': z[1], 'code': z[2], 'readings': turnstileReading}
 	return turnstile.count()
 
 # Ex. #4 Get turnstile data by Remote
@@ -71,9 +89,9 @@ def scrub(result):
 		cleaned[x] = [{'hour': (y['date']-first['date']).total_seconds(), 'in': y['in']- first['in'], 'out': y['out'] - first['out']  } for y in result[x]]
 	return cleaned
 
-import simplejson as json
 
-if __name__ == "__main__":
+
+def ridesByStation():
 	w = {}
 	for x in stat('KINGSBRIDGE RD')['RB']:
 		result = timeSeries(x['booth'])
@@ -108,5 +126,16 @@ if __name__ == "__main__":
 
 	# if I want merge the turnstile streams I have to "shuffle a deck of cards"
 	
+if __name__ == "__main__":
 
+	print station.count()
+	print RBS()
+	#Dstations = line('D')
+	#for x in Dstations:
+	#	print x, Dstations[x]
+
+	#print booths('161 ST-YANKEE')
+	print load_turnstile()
+
+	
 
