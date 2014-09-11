@@ -1,3 +1,4 @@
 *.xls
 turnstile_*.txt
 *~
+turnstile/*

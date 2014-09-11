@@ -1,0 +1,538 @@
+<html>
+<head>
+<link rel="stylesheet" href="slidy.css" type="text/css" />
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+<script src="slidy.js" charset="utf-8" type="text/javascript"></script>
+<style type="text/css">
+.chat { 
+	font-size: 30;
+}
+
+.slice{ background-color: #9999FF; font-size: 30; margin:5; padding:5;}
+
+td {vertical-align: top; font-size:20;}
+th { text-align: left; font-size:20;}
+
+.info {font-size:20;}
+
+p {font-size:25;}
+
+.station {color: #0044FF;}
+</style>
+</head>
+<body>
+<!-- INTRO 0 -->
+<div class="slide"> <div class="slice">MTA Turnstile Data Set</div>
+<table>
+<tr><td>
+<table>
+<tr><td>Name</td><td>John D Mangual</td></tr>
+<tr><td>Occupation</td><td>Data Scientist</td></tr>
+<tr><td>Hometown</td><td>Bronx, NY</td></tr>
+<tr><td>Current Location</td><td>San Juan, PR</td></tr>
+</table></td>
+<td><img src="fig-60.png" width="1000"></td></tr></table>
+
+</div>
+<!-- INTRO 2 -->
+<div class="slide"> <div class="slice">MTA Turnstile Data Set</div>
+<table>
+<tr><td width="30%"><br>Every week MTA publishes turnstile data.
+
+<ul>
+<li>All 468 subway stations, 
+<li>7 days a week, 
+<li>for the past 3 years
+<li>25MB each week
+<li>30,000 lines of <code>csv</code>
+<li><a href="http://web.mta.info/developers/turnstile.html">http://web.mta.info/developers/turnstile.html</a>
+</ul><br><br>
+This is a lot of information about:
+<ul>
+<li>Who is riding the Subway
+<li>Where they are coming from? 
+<li>Where are they going?
+</ul>
+This whole talk is about answering these simple questions.
+</td>
+<td><img src="fig-01.png" width="300"></td>
+</table>
+</div>
+<!-- INTRO 3 -->
+<div class="slide"> <div class="slice">Why?</div>
+	<span class="chat">
+	<table><tr><td>
+		<p>I always been curious about where people are going.</p>
+		<p>A test bed for data science ideas.</p>
+		<p>...</p>
+		<p>It is out there... why not use it?</p>
+	</td><td>
+	<img src="fig-51.jpg" width="500">
+	</td></table>
+	</span>
+</div>
+<!-- INTRO 3 -->
+<div class="slide"> <div class="slice">Why should you also care?</div>
+	<span class="chat">
+	<table><tr><td>
+		<p>It is your city</p>
+		<p>You ride the Subway everyday</p>		
+		<p>Businesses influenced by relation to Subway</p>
+		<p>Validate claims about congestion etc... (think of new 2nd Avenue Line)</p>		
+		<p>There should be signals in the MTA data <br><b>not necessarily having 
+		to do with the Subway itself</b>.</p>		
+		<p> -- insert your idea -- </p>	
+	</td><td>
+	<img src="fig-50.jpg" width="500">
+	</td></table>		
+	</span>
+</div>
+<!-- INTRO 4 -->
+<div class="slide"> <div class="slice">Examples + Goals</div> 
+	<table border ="1">
+	<tr><td><img src="fig-02.png" width="300"></td><td rowspan="2"><span class="chat">
+	<ul>
+	<li><b>Learn as We Go:</b><br> Don't know ahead of time what information this has about our city.
+	<li><b>Benchmarking:</b> Establish baselines for future study.
+	<li><b>Example Left:</b> 2 stations on the A-line sampled every 4 hours over the course of a week.
+	<ul>
+	<li>Can distinguish weekday from weekend patterns
+	<li>Observe the peak at morning rush hour
+	<li>Aqueduct raceway quite on off days.</ul>
+	</ul></span></td></tr>
+	<tr><td><img src="fig-03.png" width="300"></td></tr>
+	</table>
+</div>
+
+<!-- PROBLEM 1-->
+<div class="slide"> <div class="slice">Problem #1: Undecipherable</div> 
+
+<p>Here is the first row of turnstile data:</p>
+
+<pre><code>['A002', 'R051', '02-00-00', '06-14-14', '00:00:00', 'REGULAR', 
+	'004658374', '001585076', '06-14-14', '04:00:00', 'REGULAR', '004658428', 
+	'001585080', '06-14-14', '08:00:00', 'REGULAR', '004658445', '001585101', 
+	'06-14-14', '12:00:00', 'REGULAR', '004658555', '001585156', '06-14-14', 
+	'16:00:00', 'REGULAR', '004658792', '001585215', '06-14-14', '20:00:00', 
+	'REGULAR', '004659129', '001585268', '06-15-14', '00:00:00', 'REGULAR', 
+	'004659301', '001585327', '06-15-14', '04:00:00', 'REGULAR', '004659332', '001585335']</code></pre>
+<p>Any ideas?</p>
+<ul>
+<li>Things look pretty <code>REGULAR</code>
+<li>Date from <code>06-14-14</code> which is to say <code>June 14, 2014</code>
+<li>What are <code>A002</code> and <code>R051</code>?
+<li>What would <code>02-00-00</code> mean?
+</ul> 
+</div>
+<!-- PROBLEM 1-->
+<div class="slide"> <div class="slice">MTA Field Description</div> 
+
+<pre><code>Field Description
+
+C/A,UNIT,SCP,
+DATE1,TIME1,DESC1,ENTRIES1,EXITS1,
+DATE2,TIME2,DESC2,ENTRIES2,EXITS2,
+DATE3,TIME3,DESC3,ENTRIES3,EXITS3,
+DATE4,TIME4,DESC4,ENTRIES4,EXITS4,
+DATE5,TIME5,DESC5,ENTRIES5,EXITS5,
+DATE6,TIME6,DESC6,ENTRIES6,EXITS6,
+DATE7,TIME7,DESC7,ENTRIES7,EXITS7,
+DATE8,TIME8,DESC8,ENTRIES8,EXITS8
+
+C/A = Control Area (A002)
+UNIT = Remote Unit for a station (R051)
+SCP = Subunit Channel Position represents an specific address for a device (02-00-00)
+DATEn = Represents the date (MM-DD-YY)
+TIMEn = Represents the time (hh:mm:ss) for a scheduled audit event
+DEScn = Represent the "REGULAR" scheduled audit event (occurs every 4 hours)
+ENTRIESn = The comulative entry register value for a device
+EXISTn = The cumulative exit register value for a device</code></pre>
+
+</div>
+
+<div class="slide"> <div class="slice">Problem #1: Undecipherable</div> 
+
+<p>Here is the first row of turnstile data:</p>
+
+<pre><code>['A002', 'R051', '02-00-00', 
+'06-14-14', '00:00:00', 'REGULAR', '004658374', '001585076', 
+'06-14-14', '04:00:00', 'REGULAR', '004658428', '001585080', 
+'06-14-14', '08:00:00', 'REGULAR', '004658445', '001585101', 
+'06-14-14', '12:00:00', 'REGULAR', '004658555', '001585156', 
+'06-14-14', '16:00:00', 'REGULAR', '004658792', '001585215', 
+'06-14-14', '20:00:00', 'REGULAR', '004659129', '001585268', 
+'06-15-14', '00:00:00', 'REGULAR', '004659301', '001585327', 
+'06-15-14', '04:00:00', 'REGULAR', '004659332', '001585335']</code></pre>
+<p>Strategy for reading data:</p>
+<ul>
+<li>skip first three items
+<li>read in groups of 5: DATE, TIME, STATUS, ENTRIES, EXITS
+<li>reading every four hours
+<li><b>Example:</b> <span style="color:red;"><b>792</b></span>-<span style="color:red;"><b>555</b></span>=<span style="color:red;"><b>237</b></span> people entered between Noon and 4PM.
+<li>which station is this???
+</ul> 
+</div>
+
+<div class="slide"> <div class="slice">Loading CSV -- How Big is the File?</div> 
+<p>Let's do a little Python.  Use <code>csv</code> library:<p>
+<pre  class="prettyprint lang-python"><code>with open('turnstile_140621.txt', 'rb') as csvfile:
+    subwayReader = csv.reader(csvfile, delimiter=',', quotechar='"')
+    data = [row for row in subwayReader]
+print len(data)</code></pre>
+
+<p>Answer is: <b>29284</b>.  Slightly less than thirty thousand lines each week.</p>
+<p>Fits into memory!  All of NYC - one week.</p>
+<p>Python didn't break.</p>
+<p> Even 1 year of data <b>52 &times; 20MB = 1GB</b> can save to a flash drive.   So far so good.</p>
+</div>
+
+<div class="slide"> <div class="slice">Loading CSV</div> 
+<p>Let's analyze station <span class="station"><code>R195</code></span>: it happens to be Yankee Stadium<p>
+<pre  class="prettyprint lang-python"><code>sta = 'R195'
+oneStation = [d for d in data if d[1]==sta]
+
+Y = []
+for x in oneStation:
+    Y += x[3:]
+
+for t in range(len(Y)/5):
+    print [Y[5*t + k] for k in range(5)]</code></pre>
+
+<p>We get promising-looking data pertaining to one train station.</p>
+
+<pre  class="prettyprint lang-js"><code>
+['06-14-14', '00:00:00', 'REGULAR', '003233068', '003432268']
+['06-14-14', '04:00:00', 'REGULAR', '003233088', '003432274']
+['06-14-14', '04:00:00', 'RECOVR AUD', '003233088', '003432274']
+['06-14-14', '08:00:00', 'REGULAR', '003233097', '003432316']
+['06-14-14', '12:00:00', 'REGULAR', '003233125', '003432377']
+['06-14-14', '16:00:00', 'REGULAR', '003233164', '003432442']
+['06-14-14', '20:00:00', 'REGULAR', '003233224', '003432497']
+['06-15-14', '00:00:00', 'REGULAR', '003233252', '003432533']
+...
+['06-20-14', '17:00:00', 'REGULAR', '001421250', '001114228']
+['06-20-14', '21:00:00', 'REGULAR', '001421423', '001114529']
+['06-14-14', '01:00:00', 'REGULAR', '002847629', '001416722']
+['06-14-14', '05:00:00', 'REGULAR', '002847639', '001416727']
+</code></pre>
+
+<p>Unfortunately the dates start repeating themselves.</p>
+
+</div>
+
+<div class="slide"> <div class="slice">More Pathologies</div> 
+<p>Let's analyze station <span class="station"><code>R195</code></span>: it happens to be Yankee Stadium<p>
+<pre  class="prettyprint lang-python"><code>sta = 'R195'
+oneStation = [d for d in data if d[1]==sta]
+
+Y = []
+for x in oneStation:
+    Y += x[3:]
+
+for t in range(len(Y)/5):
+    print [Y[5*t + k] for k in range(5)]</code></pre>
+
+<p>Statuses can get quite irregular.  This is going to kick our butt.</p>
+
+<pre  class="prettyprint lang-js"><code>
+['06-16-14', '09:00:00', 'REGULAR',   '001417719', '001110223']
+['06-16-14', '12:08:32', 'DOOR OPEN', '001417832', '001110306']
+['06-16-14', '12:08:57', 'DOOR OPEN', '001417832', '001110306']
+['06-16-14', '12:11:32', 'LOGON',     '001417832', '001110306']
+['06-16-14', '12:11:49', 'DOOR CLOSE','001417832', '001110306']
+['06-16-14', '12:11:50', 'DOOR OPEN', '001417832', '001110306']
+['06-16-14', '12:20:22', 'LOGON',     '001417832', '001110306']
+['06-16-14', '12:20:27', 'DOOR CLOSE','001417832', '001110306']
+['06-16-14', '12:20:28', 'DOOR OPEN', '001417832', '001110306']
+['06-16-14', '12:28:09', 'DOOR OPEN', '001417832', '001110306']
+['06-16-14', '12:29:51', 'LOGON',     '001417832', '001110306']
+</code></pre>
+
+<p>Our analysis needs to exclude these quirky statuses like 
+<span class="station"><code>DOOR CLOSE</code></span>,
+<span class="station"><code>DOOR OPEN</code></span>, and
+<span class="station"><code>LOGON</code></span>,.</p>
+
+</div>
+
+<div class="slide"> <div class="slice">Even More </div> 
+<p>Let's analyze station <span class="station"><code>R113</code></span>: it happens to be <code>7 AVE-53 ST</code><p>
+<pre  class="prettyprint lang-python"><code>sta = 'R113'
+oneStation = [d for d in data if d[1]==sta]
+
+Y = []
+for x in oneStation:
+    Y += x[3:]
+
+for t in range(len(Y)/5):
+    print [Y[5*t + k] for k in range(5)]</code></pre>
+
+<p>Status is completely regular, data collected every 4 hours.</p>
+
+<pre  class="prettyprint lang-js"><code>
+['06-14-14', '01:00:00', 'REGULAR', '000006932', '000016621']
+['06-14-14', '05:00:00', 'REGULAR', '000006940', '000016632']
+['06-14-14', '09:00:00', 'REGULAR', '000006955', '000016691']
+['06-14-14', '13:00:00', 'REGULAR', '000007024', '000016857']
+['06-14-14', '17:00:00', 'REGULAR', '000007101', '000017106']
+['06-14-14', '21:00:00', 'REGULAR', '000007171', '000017378']
+['06-15-14', '01:00:00', 'REGULAR', '000007214', '000017490']
+</code></pre>
+
+<p>Instead of reading at <span class="station"><code>0:00,4:00,8:00,12:00,16:00,20:00<code></span> we get readings one hour off 
+<span class="station"><code>1:00,5:00,9:00,13:00,17:00,21:00<code></span>.</p>
+
+<p>Finally, remember we can only get 6 readings each day.  For the number of visitors between <code>7:00AM</code> and 
+<code>8:00AM<code> we have to guess.</p>
+
+</div>
+
+
+
+<!-- SOLUTION-2 -->
+
+<div class="slide"> <div class="slice">What is Interpolation?</div>
+
+<p>Sometimes... <b>*ALWAYS*</b> not enough information - not the right kind - etc.</p>
+
+<p>Interpolation is about reading in between the lines.</p>
+
+<p>We found out the MTA data set is not <b>normalized</b>.  Data collected every 4 hours... a <em>different</em> 4 hours
+	for each train station.</p>
+
+<img src="fig-61.png">
+
+ </div>
+
+<div class="slide"> <div class="slice">Break: What Train Station are we Looking At, Anyway?</div>
+
+<p>Part of the look-up table provided by MTA.  </p>
+<table><tr><td width="50%" class="info">
+<pre class="prettyprint lang-js"><code> ['R045', 'R236', '42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R045', 'R233', '42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R046', 'R238', '42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R046', 'R237', '42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R046', 'R238A','42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R047', 'R240', '42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R047', 'R237B','42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R048', 'R241A','42 ST-GRD CNTRL', '4567S',   'IRT'],
+ ['R119', 'R289', 'FORDHAM ROAD',    '4',       'IRT'],
+ ['R123', 'R622', 'FRANKLIN AVE',    '2345S',   'IRT'],
+ ['R132', 'R258', '125 ST',          '456',     'IRT'],
+ ['R133', 'R293', 'MOSHOLU PARKWAY', '4',       'IRT'],
+ ['R161', 'R290', 'KINGSBRIDGE RD',  '4',       'IRT'],
+ ['R170', 'A035', '14 ST-UNION SQ',  'LNQR456', 'BMT'],
+ ['R170', 'R221', '14 ST-UNION SQ',  'LNQR456', 'IRT'],
+ ['R170', 'A033', '14 ST-UNION SQ',  '456LNQR', 'BMT'],
+ ['R170', 'A034', '14 ST-UNION SQ',  'LNQR456', 'BMT'],
+ ['R170', 'A036', '14 ST-UNION SQ',  'LNQR456', 'BMT'],
+ ['R170', 'A037', '14 ST-UNION SQ',  'LNRQ456', 'BMT'],
+</code></pre></td>
+<td><span style="font-size:20;"><ul>
+<li>numbers on the left indicate the train station.
+	<ul>
+		<li>usually only one number
+		<li>possible 2 indicating separate "uptown" and "downtown" entrances
+		<li>larger stations have as many as four
+	</ul>
+<li>second column indicates specific entrances to train stations
+<li>additional information: <b>station name</b> and <b>routes</b> serving (include PATH)
+</ul><td></tr></span>
+</table>
+ </div>
+
+<div class="slide"> <div class="slice">Problem #4 Not Enough Station Meta-Data</div> 
+<p>No way to separate uptown and downtown traffic</p>
+<p>I think the solution is to curate the train stations by hand.  Easy: only 500 of them!<p>
+
+<table><tr><td>
+<table border = "1">
+<tr><th>NAME</th><td>FORDHAM ROAD</td></tr>
+<tr><th>ID</th><td>1234</td></tr>
+<tr><th>BORO</th><td>BRONX</td></tr>
+<tr><th>ROUTES</th><td>BD</td></tr>
+<tr><th>DIRECTION</th><td>UPTOWN, DNTOWN</td></tr>
+</table>
+</td><td>
+<table border = "1">
+<tr><th>NAME</th><td>86 ST</td></tr>
+<tr><th>ID</th><td>1010</td></tr>
+<tr><th>BORO</th><td>MANHATTAN</td></tr>
+<tr><th>ROUTES</th><td>456</td></tr>
+<tr><th>DIRECTION</th><td>DNTOWN ONLY</td></tr>
+</table>
+</td><td>
+<table border = "1">
+<tr><th>NAME</th><td>ATLANTIC AVENUE</td></tr>
+<tr><th>ID</th><td>1221</td></tr>
+<tr><th>BORO</th><td>BROOKLYN</td></tr>
+<tr><th>ROUTES</th><td>BDNQR2345</td></tr>
+<tr><th>DIRECTION</th><td>UPTOWN DNTOWN</td></tr>
+</table>
+</td>
+</tr></table>
+<p>We munge station meta-data into the format of our own choosing.</p>
+</div>
+<!-- <div class="slide"> <div class="slice">Solution-4 Machine Learning Classification</div> 
+<p>We have just asked a classification problem.  Unfortunately we have spent the whole talk cleaning data.</p>
+<p>Did it at home.  Will share you my results.</p></div> --> 
+<div class="slide"> <div class="slice">Creation and Destruction of People</div>
+<span class="chat">
+<p>Matter is neither created nor destroyed, however...</p>
+<table>
+<tr><th>Entrances</th><th>Exits</th><th>Entrances - Exits</th></tr>
+<tr><td><img src="fig-04.png"></td><td><img src="fig-05.png"></td><td><img src="fig-06.png"></td></tr>
+</table>
+<p>We learn that commuters <b>often</b> return to a different station than home.</p>
+</span>
+ </div>
+
+<div class="slide"> <div class="slice">Yankee Stadium</div> 
+<span class="chat">
+<p>Baseball games draw about 4000 people to 161st Yankee Stadium via Subway.</p>
+<p>In fact this number might be too low if people leave through the door.</p>
+<table>
+<tr><th>Entrances</th><th>Exits</th><th>Entrances - Exits</th></tr>
+<tr><td><img src="fig-71.png"></td><td><img src="fig-72.png"></td><td><img src="fig-73.png"></td></tr>
+</table>
+<p>Game day makes a huge difference.</p>
+</span>
+</div>
+
+<div class="slide"> <div class="slice">k-means Clustering</div>
+<p>Here's a crash-course in scikit-learn k-means clustering.  This is an <b>unsupervised</b> learning algorithm,
+	since we don't know what groups we should get ahead of time.
+<pre class="prettyprint lang-python"><code>from sklearn.cluster import KMeans
+kmeans = KMeans(init='k-means++', n_clusters=10, n_init=20)
+
+# ALL STATIONS ON #4 LINE
+X = [sta for sta in stations if '4' in sta[3] and sta[4] != 'PTH']
+X = list(set([y[0] for y in X]))
+
+# TURNSTILE DATA FOR EACH STATION
+Z = []
+for x in X:
+    y = f(x)['in'][::10]
+    Z += [y-y[0]]
+
+# CLUSTERING
+clusters = kmeans.fit_predict(Z)
+</code></pre>
+</div>
+
+<div class="slide"> <div class="slice">k-means Clustering</div>
+<p>Look at a print-out of the clusters.</p>
+<table border="1">
+<tr><td>
+<pre class="prettyprint lang-js"><code>
+CLUSTER 0
+['42 ST-GRD CNTRL', '4567S']
+['BOROUGH HALL/CT', '2345R']
+['FULTON ST', '2345ACJZ']
+
+CLUSTER 1
+['BROOKLYN BRIDGE', 'JZ456']
+
+CLUSTER 2
+['MT EDEN AVE', '4']
+['FULTON ST', 'ACJZ2345']
+['WOODLAWN ROAD', '4']
+['138 ST-GR CONC', '45']
+['2 BDWY CUST SRV', '45']
+['176 ST', '4']
+['183 ST', '4']
+['BEDFORD PARK BL', '4']
+['BOTANIC GARDEN', 'S2345']
+</code></pre></td><td><pre class="prettyprint lang-js"><code>
+CLUSTER 3
+['14 ST-UNION SQ', 'LNRQ456']
+
+CLUSTER 4
+['FULTON ST', '2345ACJZ']
+
+CLUSTER 5
+['42 ST-GRD CNTRL', '4567S']
+['86 ST', '456']
+
+CLUSTER 6
+['BOWLING GREEN', '45']
+['FRANKLIN AVE', '2345S']
+['42 ST-GRD CNTRL', '4567S']
+['149 ST-GR CONC', '245']
+['KINGSBRIDGE RD', '4']
+['MOSHOLU PARKWAY', '4']
+['NEVINS ST', '2345']
+['167 ST', '4']
+['FORDHAM ROAD', '4']
+['BURNSIDE AVE', '4']
+['170 ST', '4']</code></pre>
+</td>
+<td><pre class="prettyprint lang-js"><code>
+CLUSTER 7
+['BOWLING GREEN', '45']
+['CROWN HTS-UTICA', '34']
+['161 ST-YANKEE', '4BD']
+['LEXINGTON AVE', '456NQR']
+['125 ST', '456']
+
+CLUSTER 8
+['LEXINGTON AVE', '456NQR']
+['PACIFIC ST', 'BDNQR2345']
+
+CLUSTER 9
+['42 ST-GRD CNTRL', '4567S']
+['WALL ST', '45']</code></pre>
+</td>
+</tr></table>
+<p>Do you buy these results?  You shouldn't! :-P</p>
+</div>
+
+<div class="slide"> <div class="slice">Checking Our Answers</div> 
+<p>Let's plot the clusters we found to make sure they are reasonable.</p>
+
+<table border="1"><tr>
+<td><img src="fig-81.png" width="400"></td>
+<td><img src="fig-82.png" width="400"></td>
+</tr></table>
+<p>Anyone who lives in Bronx knows they two stations are adjacent and basically them same. In fact, they physically merge.</p>
+<p>Why is there no data for weekends??</p>
+</div>
+
+<div class="slide"> <div class="slice">Checking Our Answers</div> 
+<p>Let's plot the clusters we found to make sure they are reasonable.</p>
+
+<table border="1"><tr>
+<td><img src="fig-83.png" width="400"></td>
+<td><img src="fig-84.png" width="400"></td>
+</tr></table>
+<p>While obviously not the same, data suggests 86st and 42nd Grand Central have similar characteristics.</p>
+</div>
+
+<div class="slide"> <div class="slice">Conclusion + Further Directions: A Portrait of the City</div>  
+
+<table>
+<tr>
+<td><img src="fig-11.png" width="150"></td>
+<td><img src="fig-12.png" width="150"></td>
+<td><img src="fig-13.png" width="150"></td>
+<td><img src="fig-14.png" width="150"></td></tr>
+<tr>
+<td><img src="fig-21.png" width="150"></td>
+<td><img src="fig-22.png" width="150"></td>
+<td><img src="fig-23.png" width="150"></td>
+<td><img src="fig-24.png" width="150"></td></tr>
+<tr>
+<td><img src="fig-31.png" width="150"></td>
+<td><img src="fig-32.png" width="150"></td>
+<td><img src="fig-33.png" width="150"></td>
+<td><img src="fig-34.png" width="150"></td></tr>
+<tr>
+<td><img src="fig-41.png" width="150"></td>
+<td><img src="fig-42.png" width="150"></td>
+<td><img src="fig-43.png" width="150"></td>
+<td><img src="fig-44.png" width="150"></td></tr>
+</table>
+</div>
+<div class="slide"> <div class="slice">Thanks</div>  </div>
+</body>
+<html>
